@@ -1,0 +1,89 @@
+app.get("/users", (req, res) => {
+  const html = `
+   <ul>
+   ${users
+     .map((user) => `<li> ${user.id} ${user.first_name} ${user.last_name}</li>`)
+     .join(" ")}
+   </ul>`;
+  res.send(html);
+});
+app.get("/api/users", (req, res) => {
+  res.json(users);
+});
+app.get("/api/users/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const user = users.find((user) => user.id === id);
+  return res.json(user);
+});
+app.post('/api/users',(req,res) => {
+    const body = req.body;
+    users.push({...body, id:users.length+1});
+    fs.writeFile("./MOCK_DATA.json",JSON.stringify(users),(err,data) => {
+       return res.status(201).json({status : "success" , id: users.length},); 
+    })
+});
+app.patch('/api/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id);
+  const updatedData = req.body;
+
+  // Find the user by ID
+  const userToUpdate = users.find(user => user.id === userId);
+
+  if (!userToUpdate) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+  }
+
+  // Update the user data
+  Object.assign(userToUpdate, updatedData);
+
+  // Save the updated data to the file
+  fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err) => {
+      if (err) {
+          return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+      }
+      return res.json({ status: 'success', message: 'User updated successfully' });
+  });
+});
+app.put('/api/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id);
+  const updatedData = req.body;
+
+  // Find the user by ID
+  const userToUpdate = users.find(user => user.id === userId);
+
+  if (!userToUpdate) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+  }
+
+  // Replace the entire user data
+  Object.assign(userToUpdate, { ...updatedData, id: userId });
+
+  // Save the updated data to the file
+  fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err) => {
+      if (err) {
+          return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+      }
+      return res.json({ status: 'success', message: 'User replaced successfully' });
+  });
+});
+app.delete('/api/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  // Find the index of the user by ID
+  const userIndex = users.findIndex(user => user.id === userId);
+
+  if (userIndex === -1) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+  }
+
+  // Remove the user from the array
+  users.splice(userIndex, 1);
+
+  // Save the updated data to the file
+  fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err) => {
+      if (err) {
+          return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+      }
+      return res.json({ status: 'success', message: 'User deleted successfully' });
+  });
+});
